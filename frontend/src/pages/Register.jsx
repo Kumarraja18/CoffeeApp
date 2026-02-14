@@ -70,6 +70,7 @@ export default function Register() {
           email: formData.email,
           phone: formData.phone,
           gender: formData.gender.toUpperCase(),
+          role: role.toUpperCase(),
         })
         setUserId(res.userId)
       } catch (err) {
@@ -89,6 +90,7 @@ export default function Register() {
           await saveAddress(userId, {
             street: formData.street,
             city: formData.city,
+            state: formData.state,
             postalCode: formData.pincode,
           })
         } catch (err) {

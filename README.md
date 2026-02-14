@@ -1,158 +1,144 @@
-# Brew & Co - Coffee Ordering Platform
+# ☕ Brew & Co — Coffee Ordering Platform
 
-A full-stack coffee ordering platform with Spring Boot backend and React frontend.
+A full-stack coffee ordering platform built with **Spring Boot** (backend) and **React + Vite** (frontend).
 
-## 🚀 Quick Start
+## 🚀 Quick Start (One-Click)
 
-### Option 1: Run Everything at Once (Recommended)
+### Prerequisites
+1. **Java 17+** — [Download](https://adoptium.net/)
+2. **Maven** — [Download](https://maven.apache.org/download.cgi)
+3. **Node.js 18+** — [Download](https://nodejs.org/)
+4. **MySQL 8.x** — [Download](https://dev.mysql.com/downloads/installer/)
 
+### Option A: One-Click Setup & Run
+```
+SETUP_AND_RUN.bat
+```
+This checks everything, sets up the database, and starts both servers automatically.
+
+### Option B: Step-by-Step
 ```bash
-./start.sh
+# 1. Setup database (interactive — prompts for MySQL password)
+setup.bat
+
+# 2. Edit .env with your settings (optional)
+copy .env.example .env
+notepad .env
+
+# 3. Start everything
+start-all.bat
 ```
 
-This will:
-1. Set up the MySQL database (requires sudo password)
-2. Start the Spring Boot backend on `http://localhost:8080`
-3. Start the React frontend on `http://localhost:5173`
-
-### Option 2: Run Components Separately
-
-#### 1. Setup Database (One-time)
-
+### Option C: Manual
 ```bash
-./setup-db.sh
-```
-
-Or manually:
-```bash
-sudo mysql -e "CREATE DATABASE IF NOT EXISTS brewco_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
-```
-
-#### 2. Start Backend
-
-```bash
+# Terminal 1 — Backend
 cd backend
-mvn spring-boot:run
-```
+start-backend.bat
 
-Backend will be available at: `http://localhost:8080`
-
-#### 3. Start Frontend (in a new terminal)
-
-```bash
+# Terminal 2 — Frontend
 cd frontend
+npm install    # first time only
 npm run dev
 ```
 
-Frontend will be available at: `http://localhost:5173`
+## 🌐 Access
+- **Frontend**: http://localhost:5173
+- **Backend API**: http://localhost:8080
 
-## 📋 Prerequisites
+## 🔐 Default Admin
+| | |
+|---|---|
+| **Email** | admin@brewco.com |
+| **Password** | admin123 |
 
-- ✅ Java 21 (installed)
-- ✅ Maven 3.9.9 (installed)
-- ✅ Node.js & npm (installed)
-- ✅ MySQL 8.0+ (running)
+*(Override via `.env` file)*
 
-## 🗄️ Database Configuration
+## 📧 How Registration Works
+1. User fills out multi-step registration form
+2. Admin receives notification and reviews the application
+3. Admin **approves** → System generates random password → Email sent to user
+4. User logs in with the emailed credentials
 
-The application uses MySQL. Configure credentials via environment variables:
+## 🗄️ Database
+- **Engine**: MySQL 8.x
+- **Database**: `brewco_db` (auto-created on first boot)
+- **Tables**: Auto-created by Hibernate (`ddl-auto=update`)
 
-1. Copy the environment template: `cp .env.example .env`
-2. Fill in your credentials in `.env`
-
-Configuration file: `backend/src/main/resources/application.properties` (reads from env vars)
-
-## 🔧 API Endpoints
-
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login
-- `GET /api/auth/user/{id}` - Get user profile
-- `PUT /api/auth/user/{id}` - Update user profile
-
-## 🛠️ Tech Stack
-
-### Backend
-- Spring Boot 3.2.0
-- Spring Data JPA
-- MySQL 8.3.0
-- Lombok
-- Maven
-
-### Frontend
-- React 18.2.0
-- Vite 5.0.0
-- React Router DOM 6.14.1
-- React Icons 5.5.0
+### Import Existing Data
+If you have the `brewco_db.sql` dump:
+```bash
+mysql -u root -p < backend/src/main/resources/brewco_db.sql
+```
 
 ## 📁 Project Structure
-
 ```
 KumarSpringBoot/
-├── backend/          # Spring Boot application
-│   ├── src/
-│   ├── pom.xml
-│   └── README.md
-├── frontend/         # React application
-│   ├── src/
-│   ├── package.json
-│   └── README.md
-├── start.sh          # Startup script for both servers
-└── setup-db.sh       # Database setup script
+├── backend/              # Spring Boot API
+│   ├── src/main/java/com/brewco/
+│   │   ├── config/       # DataInitializer
+│   │   ├── controller/   # REST endpoints
+│   │   ├── dto/          # Data Transfer Objects
+│   │   ├── entity/       # JPA entities
+│   │   ├── repository/   # Spring Data repos
+│   │   └── service/      # Business logic
+│   └── src/main/resources/
+│       ├── application.properties
+│       └── brewco_db.sql  # DB dump
+├── frontend/             # React + Vite
+├── .env                  # Your local config (gitignored)
+├── .env.example          # Template
+├── setup.bat             # Interactive DB setup
+├── SETUP_AND_RUN.bat     # One-click everything
+└── start-all.bat         # Start both servers
 ```
 
-## 🔒 Security Notes
+## 🔧 Troubleshooting
 
-**⚠️ Important:** The current implementation uses plain text passwords. For production:
-1. Implement BCrypt password hashing
-2. Add JWT authentication tokens
-3. Configure CORS properly
-4. Add request validation
-5. Implement rate limiting
+### "Access denied for user 'root'"
+Update `DB_PASSWORD` in your `.env` file to match your MySQL root password.
 
-## 🐛 Troubleshooting
+### "Can't connect to MySQL"
+1. Open **Services** (Win+R → `services.msc`)
+2. Find **MySQL80** (or similar) → Right-click → **Start**
 
-### Backend won't start
-- Check if MySQL is running: `systemctl status mysql`
-- Verify database exists: `sudo mysql -e "SHOW DATABASES;"`
-- Check if port 8080 is available: `lsof -i :8080`
+### "Email not sending"
+- Email is **optional**. The app works without it.
+- Approval passwords are logged to the backend console.
+- To enable: Get a [Gmail App Password](https://myaccount.google.com/apppasswords) and set `MAIL_USERNAME` / `MAIL_PASSWORD` in `.env`
 
-### Frontend won't start
-- Run `npm install` in the frontend directory
-- Check if port 5173 is available: `lsof -i :5173`
+### Changing machines / laptops
+1. Install prerequisites (Java, Maven, Node.js, MySQL)
+2. Clone the repo
+3. Run `setup.bat` (it auto-detects everything)
+4. Run `SETUP_AND_RUN.bat`
 
-### Database connection errors
-- Verify MySQL credentials in `backend/src/main/resources/application.properties`
-- Ensure MySQL is running and accessible
+## 📊 API Endpoints
 
-## 📝 Development
+### Authentication
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/auth/register` | Register new user |
+| POST | `/api/auth/login` | User login |
+| GET | `/api/auth/user/{id}` | Get user profile |
+| PUT | `/api/auth/user/{id}` | Update user profile |
 
-### Backend Development
-```bash
-cd backend
-mvn clean install      # Build project
-mvn spring-boot:run    # Run application
-mvn test              # Run tests
-```
+### Registration (Multi-Step)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/register/step1/personal-details` | Save personal info |
+| POST | `/api/register/step2/address/{userId}` | Save address |
+| POST | `/api/register/step3/work-experience/{userId}` | Save work exp |
+| POST | `/api/register/step4/govt-proof/{userId}` | Save govt proof |
+| GET | `/api/register/status/{userId}` | Check status |
 
-### Frontend Development
-```bash
-cd frontend
-npm install           # Install dependencies
-npm run dev          # Start dev server
-npm run build        # Build for production
-```
-
-## 🎯 Next Steps
-
-1. ✅ Database setup
-2. ✅ Backend running
-3. ✅ Frontend running
-4. 🔲 Implement authentication
-5. 🔲 Add menu management
-6. 🔲 Add order processing
-7. 🔲 Add payment integration
-
----
-
-**Built with ❤️ for coffee lovers**
+### Admin
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/admin/dashboard-stats` | Dashboard stats |
+| GET | `/api/admin/users` | List all users |
+| GET | `/api/admin/pending-users` | List pending users |
+| GET | `/api/admin/user/{id}` | User full details |
+| PUT | `/api/admin/approve/{id}` | Approve user |
+| DELETE | `/api/admin/reject/{id}` | Reject user |
+| PUT | `/api/admin/activate/{id}` | Activate user |
+| PUT | `/api/admin/deactivate/{id}` | Deactivate user |

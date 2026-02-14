@@ -92,6 +92,7 @@ public class AdminService {
             m.put("id", a.getId());
             m.put("street", a.getStreet());
             m.put("city", a.getCity());
+            m.put("state", a.getState());
             m.put("postalCode", a.getPostalCode());
             return m;
         }).collect(Collectors.toList());
@@ -161,12 +162,7 @@ public class AdminService {
         String email = user.getEmail();
         String firstName = user.getFirstName();
 
-        // Delete related records first
-        addressRepository.deleteAll(addressRepository.findByUserId(userId));
-        workExperienceRepository.deleteAll(workExperienceRepository.findByUserId(userId));
-        governmentProofRepository.deleteAll(governmentProofRepository.findByUserId(userId));
-
-        // Delete user
+        // CascadeType.ALL + orphanRemoval=true handles child entity cleanup
         userRepository.delete(user);
 
         // Send rejection email
@@ -182,13 +178,40 @@ public class AdminService {
         userRepository.save(user);
     }
 
-    // Activate user
-    public void activateUser(Long userId) throws Exception {
+    // Activate user — if user has no password (first-time), generate one and send
+    // email
+    public Map<String, Object> activateUser(Long userId) throws Exception {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new Exception("User not found"));
-        user.setIsActive(true);
-        user.setUpdatedAt(LocalDateTime.now());
-        userRepository.save(user);
+
+        Map<String, Object> result = new HashMap<>();
+        boolean needsPassword = user.getPassword() == null || user.getPassword().isBlank();
+
+        if (needsPassword) {
+            // First-time activation = same as approval
+            String randomPassword = generateRandomPassword(10);
+            user.setPassword(randomPassword);
+            user.setIsActive(true);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            // Send email with credentials
+            emailService.sendApprovalEmail(user.getEmail(), user.getFirstName(), randomPassword);
+
+            result.put("message", "User activated and password sent to " + user.getEmail());
+            result.put("generatedPassword", randomPassword);
+        } else {
+            // Reactivation (user was previously approved, just deactivated)
+            user.setIsActive(true);
+            user.setUpdatedAt(LocalDateTime.now());
+            userRepository.save(user);
+
+            result.put("message", "User reactivated successfully");
+        }
+
+        result.put("userId", user.getId());
+        result.put("email", user.getEmail());
+        return result;
     }
 
     // -- Helpers --

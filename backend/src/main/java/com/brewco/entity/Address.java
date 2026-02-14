@@ -26,6 +26,8 @@ public class Address {
     @Column(nullable = false)
     private String city;
 
+    private String state;
+
     @Column(nullable = false)
     private String postalCode;
 }

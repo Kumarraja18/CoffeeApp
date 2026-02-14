@@ -46,7 +46,22 @@ public class RegistrationService {
         user.setEmail(email);
         user.setPhoneNumber((String) details.get("phone"));
         user.setGender((String) details.get("gender"));
-        user.setRole("CUSTOMER"); // Set default role
+
+        // Use the role from registration (default to CUSTOMER if not provided)
+        String requestedRole = (String) details.get("role");
+        if (requestedRole != null && !requestedRole.isBlank()) {
+            String normalizedRole = requestedRole.toUpperCase().trim();
+            // Only allow safe roles — prevent someone from registering as ADMIN
+            if ("CUSTOMER".equals(normalizedRole) || "CAFE_OWNER".equals(normalizedRole)
+                    || "CHEF".equals(normalizedRole) || "WAITER".equals(normalizedRole)) {
+                user.setRole(normalizedRole);
+            } else {
+                user.setRole("CUSTOMER"); // Fallback for invalid/disallowed roles
+            }
+        } else {
+            user.setRole("CUSTOMER");
+        }
+
         user.setIsActive(false); // Not active until admin approves
 
         User savedUser = userRepository.save(user);
@@ -67,6 +82,7 @@ public class RegistrationService {
         address.setUser(user);
         address.setStreet(addressDto.getStreet());
         address.setCity(addressDto.getCity());
+        address.setState(addressDto.getState());
         address.setPostalCode(addressDto.getPostalCode());
 
         addressRepository.save(address);

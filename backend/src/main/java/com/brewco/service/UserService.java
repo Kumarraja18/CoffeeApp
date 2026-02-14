@@ -50,13 +50,20 @@ public class UserService {
 
         User existingUser = user.get();
 
+        // Check activation status FIRST (before password check)
+        // Pending users from multi-step registration have NULL passwords
+        if (!existingUser.getIsActive()) {
+            throw new Exception("Your account is pending admin approval. Please wait for approval.");
+        }
+
+        // Guard against null password (user approved without password somehow)
+        if (existingUser.getPassword() == null || existingUser.getPassword().isBlank()) {
+            throw new Exception("Your account has not been fully set up yet. Please contact admin.");
+        }
+
         // Simple password check (in production, use BCrypt!)
         if (!existingUser.getPassword().equals(request.getPassword())) {
             throw new Exception("Invalid password");
-        }
-
-        if (!existingUser.getIsActive()) {
-            throw new Exception("Your account is pending admin approval. Please wait for approval.");
         }
 
         // Cross-verify role if provided from frontend

@@ -1,6 +1,7 @@
 package com.brewco.service;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.SimpleMailMessage;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
@@ -11,16 +12,51 @@ public class EmailService {
     @Autowired(required = false)
     private JavaMailSender mailSender;
 
-    public void sendApprovalEmail(String toEmail, String firstName, String password) {
+    @Value("${spring.mail.username:}")
+    private String fromEmail;
+
+    /**
+     * Check if email is actually configured (username + password present).
+     * Spring Boot creates JavaMailSender even with empty credentials,
+     * so we must check the actual values.
+     */
+    private boolean isMailConfigured() {
         if (mailSender == null) {
-            System.out.println("⚠ Mail sender not configured. Skipping email.");
-            System.out.println("  Would have sent to: " + toEmail);
-            System.out.println("  Generated password: " + password);
+            return false;
+        }
+        if (fromEmail == null || fromEmail.isBlank()) {
+            return false;
+        }
+        return true;
+    }
+
+    public void sendApprovalEmail(String toEmail, String firstName, String password) {
+        System.out.println("============================================");
+        System.out.println("📧 APPROVAL EMAIL REQUEST");
+        System.out.println("   To:       " + toEmail);
+        System.out.println("   Name:     " + firstName);
+        System.out.println("   Password: " + password);
+        System.out.println("   From:     " + fromEmail);
+        System.out.println("   MailSender: " + (mailSender != null ? "AVAILABLE" : "NULL"));
+        System.out.println("============================================");
+
+        if (!isMailConfigured()) {
+            System.out.println("⚠ ══════════════════════════════════════════");
+            System.out.println("⚠ EMAIL NOT CONFIGURED — Printing credentials to console instead:");
+            System.out.println("⚠");
+            System.out.println("⚠   User Email:      " + toEmail);
+            System.out.println("⚠   Login Password:  " + password);
+            System.out.println("⚠");
+            System.out.println("⚠   To enable email, set MAIL_USERNAME and MAIL_PASSWORD in .env");
+            System.out.println("⚠ ══════════════════════════════════════════");
             return;
         }
 
         try {
+            System.out.println("📧 Sending approval email via SMTP...");
+
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(toEmail);
             message.setSubject("☕ Brew & Co — Your Account Has Been Approved!");
             message.setText(
@@ -38,21 +74,35 @@ public class EmailService {
                             "Brew & Co Admin Team");
 
             mailSender.send(message);
-            System.out.println("✓ Approval email sent to: " + toEmail);
+            System.out.println("✅ ══════════════════════════════════════════");
+            System.out.println("✅ APPROVAL EMAIL SENT SUCCESSFULLY!");
+            System.out.println("✅   To: " + toEmail);
+            System.out.println("✅ ══════════════════════════════════════════");
         } catch (Exception e) {
-            System.err.println("✗ Failed to send email to " + toEmail + ": " + e.getMessage());
+            System.err.println("❌ ══════════════════════════════════════════");
+            System.err.println("❌ FAILED TO SEND EMAIL");
+            System.err.println("❌   To:         " + toEmail);
+            System.err.println("❌   From:       " + fromEmail);
+            System.err.println("❌   Error:      " + e.getMessage());
+            System.err.println("❌   Error Type: " + e.getClass().getName());
+            System.err.println("❌");
+            System.err.println("❌   The user IS approved — password: " + password);
+            System.err.println("❌   Share this password manually with the user.");
+            System.err.println("❌ ══════════════════════════════════════════");
+            e.printStackTrace();
             // Don't throw — the user is already approved; log and continue
         }
     }
 
     public void sendRejectionEmail(String toEmail, String firstName) {
-        if (mailSender == null) {
-            System.out.println("⚠ Mail sender not configured. Skipping rejection email.");
+        if (!isMailConfigured()) {
+            System.out.println("⚠ Mail not configured. Skipping rejection email to: " + toEmail);
             return;
         }
 
         try {
             SimpleMailMessage message = new SimpleMailMessage();
+            message.setFrom(fromEmail);
             message.setTo(toEmail);
             message.setSubject("Brew & Co — Registration Update");
             message.setText(
@@ -64,8 +114,10 @@ public class EmailService {
                             "Brew & Co Admin Team");
 
             mailSender.send(message);
+            System.out.println("✅ Rejection email sent to: " + toEmail);
         } catch (Exception e) {
-            System.err.println("✗ Failed to send rejection email: " + e.getMessage());
+            System.err.println("❌ Failed to send rejection email to " + toEmail + ": " + e.getMessage());
+            e.printStackTrace();
         }
     }
 }

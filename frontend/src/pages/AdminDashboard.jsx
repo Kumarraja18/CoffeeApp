@@ -147,8 +147,8 @@ export default function AdminDashboard({ user }) {
 
   const handleActivate = async (userId) => {
     try {
-      await activateUser(userId)
-      showToast('success', 'User Activated', 'User account has been activated.')
+      const result = await activateUser(userId)
+      showToast('success', 'User Activated', result.message || 'User account has been activated.')
       loadDashboard()
     } catch (err) {
       showToast('error', 'Error', err.message)
@@ -359,6 +359,7 @@ export default function AdminDashboard({ user }) {
                         <div key={i} className="admin-modal-detail-grid" style={{ marginBottom: '.5rem' }}>
                           <DetailItem label="Street" value={addr.street} />
                           <DetailItem label="City" value={addr.city} />
+                          <DetailItem label="State" value={addr.state} />
                           <DetailItem label="Postal Code" value={addr.postalCode} />
                         </div>
                       ))}

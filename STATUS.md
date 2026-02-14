@@ -1,8 +1,23 @@
-# ✅ Brew & Co Project - Successfully Running!
+# ✅ Brew & Co — Plug-and-Play Status
 
-## 🎉 Status: RUNNING
+## 🎉 Status: READY (Plug & Play)
 
-Both backend and frontend servers are now up and running!
+This project is configured to work on **any Windows machine** with MySQL installed.
+
+---
+
+## 🚀 One-Click Start
+
+Double-click `SETUP_AND_RUN.bat` — it does everything automatically.
+
+### What it does:
+1. ✅ Checks Java, Maven, Node.js, MySQL
+2. ✅ Starts MySQL service (auto-detects service name)
+3. ✅ Creates `brewco_db` database (if not exists)
+4. ✅ Installs frontend dependencies (if needed)
+5. ✅ Starts Backend on port 8080
+6. ✅ Starts Frontend on port 5173
+7. ✅ Creates default admin user on first boot
 
 ---
 
@@ -13,148 +28,79 @@ Both backend and frontend servers are now up and running!
 
 ---
 
-## 🔐 Admin Credentials
+## 🔐 Default Admin
 
-Configured via environment variables in `.env` file.
+| Field | Value |
+|-------|-------|
+| Email | `admin@brewco.com` |
+| Password | `admin123` |
 
----
-
-## 📊 What Was Done
-
-### 1. ✅ Environment Setup
-- Installed Maven 3.9.9
-- Verified Java 21 (compatible with Java 17 requirement)
-- Verified Node.js and npm
-- Confirmed MySQL 8.0 is running
-
-### 2. ✅ Database Configuration
-- Created `brewco_db` database
-- Created MySQL user `brewco` with credentials stored in `.env`
-- Granted all privileges on `brewco_db` to `brewco` user
-- Updated `application.properties` to use new database user
-
-### 3. ✅ Backend Setup
-- Built the Spring Boot project successfully
-- Started backend server on port 8080
-- Hibernate automatically created database tables:
-  - `users` - User accounts
-  - `addresses` - User addresses
-  - `govt_proof` - Government ID proofs
-  - `work_experience` - Work experience records
-- Created default admin user
-
-### 4. ✅ Frontend Setup
-- Installed npm dependencies
-- Started Vite development server on port 5173
+*(Customize in `.env` file)*
 
 ---
 
-## 🛠️ Running Commands
+## 🔄 How Registration & Approval Works
 
-### Backend Terminal (Currently Running)
-```bash
-cd /home/raviteja/Projects/KumarSpringBoot/backend
-mvn spring-boot:run
-```
-
-### Frontend Terminal (Currently Running)
-```bash
-cd /home/raviteja/Projects/KumarSpringBoot/frontend
-npm run dev
-```
+1. **User registers** via multi-step form (personal details, address, work exp, govt proof)
+2. User status = **PENDING** (isActive = false)
+3. **Admin logs in** → sees pending users in dashboard
+4. Admin clicks **Approve** → system generates random password
+5. **Email sent** to user with their login credentials
+6. User can now **login** with the emailed password
 
 ---
 
-## 🔄 How to Restart
+## 📧 Email Configuration (Optional)
 
-### Stop Servers
-Press `Ctrl+C` in each terminal to stop the servers
-
-### Restart Everything
-```bash
-cd /home/raviteja/Projects/KumarSpringBoot
-./start.sh
+Email works automatically if configured in `.env`:
+```
+MAIL_USERNAME=your_email@gmail.com
+MAIL_PASSWORD=your_gmail_app_password
 ```
 
-Or manually:
-
-**Terminal 1 - Backend:**
-```bash
-cd backend
-mvn spring-boot:run
-```
-
-**Terminal 2 - Frontend:**
-```bash
-cd frontend
-npm run dev
-```
+**Without email**: The app still works! Approval passwords are printed to the backend console log.
 
 ---
 
-## 📝 API Endpoints Available
+## 🔧 Plug-and-Play Features
 
-### Authentication
-- `POST /api/auth/register` - Register new user
-- `POST /api/auth/login` - User login  
-- `GET /api/auth/user/{id}` - Get user profile
-- `PUT /api/auth/user/{id}` - Update user profile
+| Feature | How It Works |
+|---------|-------------|
+| **Database auto-creation** | `createDatabaseIfNotExist=true` in JDBC URL |
+| **Table auto-creation** | Hibernate `ddl-auto=update` |
+| **Admin auto-creation** | `DataInitializer.java` on first boot |
+| **No hardcoded passwords** | Everything from `.env` with safe defaults |
+| **MySQL service auto-start** | Scripts try MySQL80, MySQL, MySQL57, etc. |
+| **Works without .env** | Smart defaults: root user, empty password |
+| **Email optional** | `@Autowired(required = false)` for mail sender |
+| **Existing data import** | `brewco_db.sql` available for MySQL Workbench import |
+
+---
+
+## 📂 Scripts
+
+| Script | Purpose |
+|--------|---------|
+| `SETUP_AND_RUN.bat` | One-click setup + run |
+| `setup.bat` | Interactive MySQL setup (finds MySQL, prompts for password) |
+| `setup-mysql.bat` | Quick DB setup using .env credentials |
+| `start-all.bat` | Start both servers |
+| `backend/start-backend.bat` | Start backend only |
 
 ---
 
 ## 🗄️ Database Details
 
-- **Database Name**: brewco_db
-- **Host**: localhost:3306
-- **Credentials**: Configured via `.env` file
+- **Engine**: MySQL 8.x
+- **Database**: brewco_db (auto-created)
+- **Tables**: users, addresses, govt_proof, work_experience
 
-### Tables Created
-1. **users** - Main user table with authentication
-2. **addresses** - User address information
-3. **govt_proof** - Government ID verification
-4. **work_experience** - Employment history
-
----
-
-## 🎯 Next Steps
-
-1. Open http://localhost:5173 in your browser to see the frontend
-2. Test the API endpoints using http://localhost:8080/api/auth/...
-3. Login with the default admin credentials
-4. Start developing your features!
+### Import via MySQL Workbench
+1. Open MySQL Workbench
+2. Connect to localhost:3306
+3. File → Open SQL Script → `backend/src/main/resources/brewco_db.sql`
+4. Execute
 
 ---
 
-## 📚 Useful Scripts Created
-
-- **start.sh** - Starts both backend and frontend
-- **setup-db.sh** - Sets up the database (already done)
-- **README.md** - Complete project documentation
-
----
-
-## 🐛 Troubleshooting
-
-### If backend fails to connect to database:
-```bash
-sudo mysql -e "SHOW DATABASES;"
-sudo mysql -e "SELECT user, host FROM mysql.user WHERE user='brewco';"
-```
-
-### If port is already in use:
-```bash
-# Check what's using port 8080
-lsof -i :8080
-
-# Check what's using port 5173
-lsof -i :5173
-```
-
-### To restart MySQL:
-```bash
-sudo systemctl restart mysql
-```
-
----
-
-**🎊 Your project is ready to use! Happy coding! 🎊**
+## 🎊 Your project is plug-and-play! Works on any machine! 🎊

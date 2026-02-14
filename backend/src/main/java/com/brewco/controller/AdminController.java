@@ -93,8 +93,8 @@ public class AdminController {
     @PutMapping("/activate/{id}")
     public ResponseEntity<?> activateUser(@PathVariable Long id) {
         try {
-            adminService.activateUser(id);
-            return ResponseEntity.ok(Map.of("message", "User activated successfully"));
+            Map<String, Object> result = adminService.activateUser(id);
+            return ResponseEntity.ok(result);
         } catch (Exception e) {
             return ResponseEntity.badRequest().body(Map.of("error", e.getMessage()));
         }
